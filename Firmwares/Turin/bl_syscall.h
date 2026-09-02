@@ -1,6 +1,6 @@
 /*****************************************************************************
 *
-* Copyright (C) 2008-2024 Advanced Micro Devices, Inc. All rights reserved.
+* Copyright (C) 2008-2025 Advanced Micro Devices, Inc. All rights reserved.
 *
 *******************************************************************************
 */
@@ -130,13 +130,21 @@ typedef enum SVC_CONFIG_ID_E {
     SVC_CONFIG_ID_SET_S3_MCA_CONTROL            = 0x41,
     SVC_CONFIG_ID_SFS_SUPPORT                   = 0x46,
     SVC_CONFIG_ID_SFS_OEM_CO_SIGN               = 0x47,
+    SVC_CONFIG_ID_MCA_TABLE_64_BANK_EN          = 0x48,
     SVC_CONFIG_ID_SET_S3_IPID_OFFSET            = 0x50,
+    SVC_CONFIG_ID_SET_S3_MCG_CTL_OFFSET         = 0x52,
+    SVC_CONFIG_ID_SET_SEC_I2C_VOLTAGE_MODE      = 0x53,
 } SVC_CONFIG_ID;
 
 #define UNUSED_VALUE                0xDEADBEEF
 
 #define MAX_TOTAL_DIE_NUM           32
+
+#ifdef BUILD_RS
 #define FW_SUPPORTED_MAX_NUM_CCDS   16
+#elif BUILD_BRH
+#define FW_SUPPORTED_MAX_NUM_CCDS   16
+#endif
 
 // Define HMCA Operation types
 typedef enum HMAC_OP_TYPE_E {
@@ -275,6 +283,7 @@ typedef struct MCM_INFO_T {
     uint32_t    ccd_present_bit_mask;                                    // Bit mask for CCD Present, 1:CCD Present, 0:CCD not present
     uint16_t    core_present_in_ccd_bit_mask[FW_SUPPORTED_MAX_NUM_CCDS]; // Bit mask for cores present for each CCDs, 1:Core Present, 0: Core not present
     uint64_t    ppin;                                                    // Processor Serial Number
+    bool        is_simnow;                                               // Flag to indicate running on SimNow or emulation
     uint32_t    umc_present_bit_mask;                                    // Bit mask of present UMCs (needed for harvesting)
     uint8_t     ecc_seed_hash[32];                                       // Hash of the ECC SEED value from LSB1
     bool        is_smt_enabled;                                          // Flag to indicate if smt is enabled or not, 1: SMT enabled, 0: SMT not enabled
@@ -523,6 +532,8 @@ typedef enum SYSHUB_TARGET_TYPE_E {
     AxUSER_FCH_HT_IO           = 0x6, // FCH HT (port80)          // [2:0] =[ 1,1,0]
     AxUSER_FCH_MMIO            = AxUSER_FCH_HT_IO, // FCH MMIO
     AxUSER_MAX                 = 0xFF,
+    // HDM: TODO Bit ATid[5:3] - Address Translation ID, indication of which page table will be used
+    // in IOMMU, (only valid when Bypass=1'b0, but we have 3 of those)
     SYSHUB_TARGET_TYPE_MAX_VAL = AxUSER_FCH_MMIO
 } SYSHUB_TARGET_TYPE;
 
@@ -569,12 +580,15 @@ typedef enum SOC_VER_E {
     B1_SOC_VER_VAL            = 0x11,
     C0_SOC_VER_VAL            = 0x20,
     C1_SOC_VER_VAL            = 0x21,
+    DENSE_A0_SOC_VER_VAL      = 0x100,
+    DENSE_B0_SOC_VER_VAL      = 0x110,
     SOC_VER_FORCE_32_BIT_ENUM = 0x7FFFFFFF /*!< [UNUSED] Added to force this enum to 32-bits */
 } SOC_VER_E;
 
 typedef enum CPUID_EXT_MODEL_E {
     INVAL_EXT_MODEL_VAL       = -0x1,
     CPUID_EXT_MODEL_CLASSIC   = 0x0,
+    CPUID_EXT_MODEL_DENSE     = 0x1,
 } CPUID_EXT_MODEL_E;
 
 typedef enum SDP_ENABLE_MASK_E {
@@ -618,6 +632,12 @@ typedef enum SEV_MODE_T {
 
 typedef enum {
     BOARD_TYPE_GENERIC          = 0,
+    BOARD_TYPE_ONYX_SLT         = 1,
+    BOARD_TYPE_COMPLIANCE       = 2,
+    BOARD_TYPE_2P_2G            = 3,
+    BOARD_TYPE_3G               = 4,
+    BOARD_TYPE_2G               = 5,
+    BOARD_TYPE_MAX,
 } BOARD_TYPE;
 
 /**
@@ -662,6 +682,18 @@ typedef struct MCA_CORE_IPID_INFO_T {
     uint32_t    s3_mca_mc6_fp_ipid_offset;
     uint32_t    reserved1;
 } MCA_CORE_IPID_INFO;
+
+// This structure holds parameters required - S3 save area offsets for core banks MCG_CTL registers from ABL to ASP
+typedef struct MCA_CORE_MCG_CTL_INFO_T {
+    uint32_t    s3_mca_mc0_mcg_ctl_offset;
+    uint32_t    s3_mca_mc1_mcg_ctl_offset;
+    uint32_t    s3_mca_mc2_mcg_ctl_offset;
+    uint32_t    s3_mca_mc3_mcg_ctl_offset;
+    uint32_t    reserved0;
+    uint32_t    s3_mca_mc5_mcg_ctl_offset;
+    uint32_t    s3_mca_mc6_mcg_ctl_offset;
+    uint32_t    reserved1;
+} MCA_CORE_MCG_CTL_INFO;
 
 // data for PROP_ID_GET_MCM_CPU_ONLY__MODE
 typedef struct MCM_CPU_ONLY_MODE_T {
@@ -740,6 +772,7 @@ typedef struct SMKE_QUERY_RSP_T
 {
     uint8_t  version;        // Version number supported
     uint8_t  keys;           // Number of keys that can be loaded by a host.
+                             //   For Stones this will either be 0 or 63
     uint8_t  reserved[62];   // Reserved must be 0
 } SMKE_QUERY_RSP;
 
@@ -794,6 +827,7 @@ typedef enum USR_MODE_CONFIGID_E {
     USR_MODE_CONFIGID_SECURITY_STATE  = 0x29,
     SVC_CONFIG_ID_MP5_CORE_DISABLE    = 0x3A,
     SVC_CONFIG_ID_GET_MP5_SMT_ENABLE  = 0x40,
+    SVC_CONFIG_ID_GET_EFS             = 0x56,
 } USR_MODE_CONFIGID;
 
 // Security state return from PSP Bootloader mapped to the Secure state return from BOOTROM defined in mp_reg.h
@@ -805,6 +839,12 @@ typedef enum MPASP_SECURITY_STATE_T
     MPASP_SECURITY_STATE_PROTO           =   0x3,
     MPASP_SECURITY_STATE_SECURE          =   0x4,
 } MPASP_SECURITY_STATE;
+
+// I2C SEC voltage mode selection based on mother board design. User needs to select it
+typedef enum ASP_I2C_SEC_VOLT_MODE_E {
+    VOLT_MODE_1_1  = 11,
+    VOLT_MODE_1_8  = 18,
+} ASP_I2C_SEC_VOLT_MODE;
 
 /**
  * @brief Exit from the User Application
@@ -910,6 +950,31 @@ __svc(SVC_UNMAP_SMN) uint32_t Svc_UnmapSmn(uintptr_t AxiAddress);
  *  @return
  */
 __svc(SVC_SET_DEBUG_STATE) void Svc_SetDebugState(uint32_t fEnable);
+
+/**
+ *  @brief Print debug message
+ *  @details Print debug message into SimNow console. In emulation environment and on
+ *           real silicon does not do anything.
+ *
+ *  @param pString -   null-terminated string
+ *
+ *  @return
+ */
+__svc(SVC_DEBUG_PRINT) void Svc_DebugPrint(const char *pString);
+
+/**
+ *  @brief Debug Print 4 words
+ *  @details Print 4 DWORD values in hex into SimNow console. In emulation environment and on
+ *           real silicon does not do anything.
+ *
+ *  @param   Dword0 - 32-bit DWORD to print
+ *  @param   Dword1 - 32-bit DWORD to print
+ *  @param   Dword2 - 32-bit DWORD to print
+ *  @param   Dword3 - 32-bit DWORD to print
+ *
+ *  @return
+ */
+__svc(SVC_DEBUG_PRINT_EX) void Svc_DebugPrintEx(uint32_t Dword0, uint32_t Dword1, uint32_t Dword2, uint32_t Dword3);
 
 /**
  *  @brief Map SYSHUB address.
@@ -1197,6 +1262,8 @@ __svc(SVC_OTP_HMAC256_SIGN) uint32_t Svc_OTPHmac256Sign(uint8_t *pHmac, uint32_t
  *         ** In multi-Socket configuration, for VALIDATE operation, this API must be
  *            called by both Master and Slave, as PSP FW will share HMAC result to
  *            Slave always.
+ *            TODO: Define a new flag to decide on whether P2P communication should be
+ *                  done to share HMAC result.
  *
  * @param pData    [in]     - Data to HMAC Sign/Validate
  * @param DataSize [in]     - Size of data to HMAC
@@ -1465,7 +1532,7 @@ __svc(SVC_SET_PSP_DEBUG_MODE) uint32_t Svc_SetPSPDebugMode(uint32_t DebugMode);
  * @brief This should be called in order to set SYSHUB watchdog timer timeout configuration.
  * @details *
  *
- * @param nbioInstId - NBIO instance to which this interval should be applied.
+ * @param nbioInstId - NBIO instance to which this interval should be applied. (There are total 4 NBIO instances in SSP)
  *                     Pass 0xFFFF_FFFF to set all available instances of NBIO with the specified interval configuration.
  * @param msec - Interval time for timeout in msec.
  *               Minimum timer value = 1ms. Max timer value =85850 msec.

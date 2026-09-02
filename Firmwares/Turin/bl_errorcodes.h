@@ -1,6 +1,6 @@
 /*****************************************************************************
 *
-* Copyright (C) 2008-2024 Advanced Micro Devices, Inc. All rights reserved.
+* Copyright (C) 2008-2025 Advanced Micro Devices, Inc. All rights reserved.
 *
 *******************************************************************************
 */
@@ -15,7 +15,10 @@
  *
  * Bootloader Return Codes, Error (0x00 through 0x9F) and Progress (0xA0 through 0xFF)
  *
- *   For Posrt-80, PostCodePrefix = 0xEE000000
+ *   For Port-80, PostCodePrefix:
+ *              ASP FMC = 0xAA000000
+ *              ASP BL2 = 0xEE100000
+ *              ASP TEE = 0xED000000 or 0xEE000000
  *   For MP0_FW_STATUS, PostCodePrefix = 0x00000100
  */
 typedef enum BL_RETCODE_T {
@@ -170,10 +173,10 @@ typedef enum BL_RETCODE_T {
     BL_ERR_FWTYPE_MISMATCH              = 0x92, /*!< FW type mismatch between the requested FW type and the FW type embedded in the FW binary header */
     BL_ERR_SVC_CALL_ADDR_VIOLATION      = 0x93, /*!< SVC call input parameter address violation */
     BL_ERR_FCL_MISMATCH                 = 0x94, /*!< Firmware Compatibility Level mismatch */
-    BL_ERR_KNOLL_BAD_STATUS             = 0x95, /*!< Bad status returned by I2CKnollCheck */
+    BL_ERR_ESPI_SLAVE_TIMEOUT           = 0x95, /*!< Timeout in eSPI slave device*/
     BL_ERR_INVALID_IDEVID               = 0x96, /*!< IDEVID certificate is invalid */
-    BL_ERR_I2C_KNOLL_NULL_PTR           = 0x97, /*!< Null pointer passed to I2CKnollCheck */
-    BL_ERR_KNOLL_DEV_ID_INVALID         = 0x98, /*!< Invalid device-ID found during Knoll authentication */
+    BL_ERR_INVALID_MODULE_HEADER        = 0x97, /*!< Invalid header version */
+    BL_ERR_INVALID_MEASUREMENT_ALGORITHM= 0x98, /*!< Invalid or depreciated SHA algorithm */
     BL_ERR_KNOLL_KEY_DERIV              = 0x99, /*!< Error during Knoll/Prom key derivation */
     BL_ERR_CCP_NULL_PTR                 = 0x9A, /*!< Null pointer passed to Crypto function */
     BL_ERR_PSP_SMU_UNKNOWN_MSG_FAIL     = 0x9B, /*!< SMU reports Unknown command for sent message. This is non-blocking */
@@ -249,6 +252,7 @@ typedef enum BL_RETCODE_T {
     BL_SUCCESS_SRAM_IMAGE_ALREADY_LOADED= 0xDC, /*!< When same fw image type is already loaded in SRAM */
     BL_SUCCESS_SECURE_UNLOCK_RETURN     = 0xE0, /*!< Unlock return */
     BL_SUCCESS_TRIGGER_SYSTEM_RESET     = 0xE2, /*!< Token exipration reset triggered */
+    /*!< 0xDD - 0xE2 progress codes are available */
     BL_SUCCESS_VALIDATED_DXIO_PHY_FW_KEY= 0xE3, /*!< Completed DXIO PHY SRAM FW key Validation step */
     BL_SUCCESS_MP1_SRAM_LOAD            = 0xE4, /*!< MP1 firmware load to SRAM success */
     BL_SUCCESS_MP1_SRAM_READ            = 0xE5, /*!< Bootloader read the MP1 SRAM successfully */
@@ -263,7 +267,7 @@ typedef enum BL_RETCODE_T {
     BL_SUCCESS_LX6_FW_READY             = 0xEE, /*!< LX6 firmware is running and ready */
     BL_SUCCESS_S3_IMAGE_LOAD_DONE       = 0xEF, /*!< Loading of S3 image done successfully */
     BL_SUCCESS_2K4K_KEY_VERIFY          = 0xF0, /*!< Bootloader successfully verify signed image using 4K/2K key */
-    BL_SUCCESS_MULTI_SOCKET_BOOT        = 0xF1, /*!< Bootloader identified as running multi-socket boot */
+    BL_SUCCESS_MULTI_SOCKET_BOOT        = 0xF1, /*!< Bootloader identified as running on SP32P or multi-socket boot */
     BL_SUCCESS_SECURITY_POLICY_CHECK    = 0xF2, /*!< Security Policy check successful (only in secure boot) */
     BL_SUCCESS_SS3                      = 0xF3, /*!< Bootloader successfully loaded SS3 */
     BL_SUCCESS_FTPM                     = 0xF4, /*!< Bootloader successfully load fTPM Driver */
