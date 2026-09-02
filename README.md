@@ -16,3 +16,5 @@ By using this beta firmware, you agree to the terms and conditions of the UEFI H
 
 The beta release of these PI binaries is intended to integrate with the AMD openSIL Turin Proof-Of-Concept (POC), which is available at https://github.com/openSIL/openSIL.
 
+`Firmwares/Turin` is the Turin PI 1.0.0.9 binary set. Most PSP payloads use the encrypted encodings (`.esbin` / `.ecsbin` / `.cesbin`). Coreboot `fw.cfg` files that still name uncompressed `.sbin` / `.csbin` counterparts need to be updated to the filenames in this directory.
+

@@ -27,6 +27,9 @@
  *
  */
 typedef enum {
+  TpAcgDbErrorStart                          = 0x0ACE,  ///<ApcbConfgGet DbError start. Codes follow
+  TpAcgDbErrorEnd                            = 0x0ACF,  ///<ApcbConfgGet DbError end.
+
   // ABL0 Code Test points
   TpABL0Code001                              = 0xABC1,  ///<ABL L0 Test Point 001
   TpABL0Code002                              = 0xABC2,  ///<ABL L0 Test Point 002
@@ -66,6 +69,7 @@ typedef enum {
   TpABL15Code019                             = 0xABF3,  ///<ABL L15 Test Point 019
   TpABL15Code020                             = 0xABF4,  ///<ABL L15 Test Point 020
 
+  TpMemEmulationError                        = 0xBAAD,  ///< Memory Emulation Fail
   TpApcbMemOverclockRecoveryError            = 0XBAAB,  ///< Memory Overclock recovery Fail
   TpAblMemoryOverclockErrorRRWText           = 0XBAAC,  ///< Memory Overclock RRW Text
 
@@ -218,6 +222,7 @@ typedef enum {
   TP0xAD                                     = 0xE0AD, ///< GNB internal debug code
   TP0xAE                                     = 0xE0AE, ///< GNB internal debug code
   TP0xAF                                     = 0xE0AF, ///< GNB internal debug code
+
 
   //
   // New ABL Post Code Definitions
