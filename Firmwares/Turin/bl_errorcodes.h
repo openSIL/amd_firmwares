@@ -1,6 +1,19 @@
 /*****************************************************************************
 *
-* Copyright (C) 2008-2025 Advanced Micro Devices, Inc. All rights reserved.
+* Copyright (C) Advanced Micro Devices, Inc., or its affiliates. All
+* rights reserved.
+*
+* You may not use this software and documentation (if any)
+* (collectively, the "Materials") except in compliance with the terms
+* and conditions of the Software License Agreement included with the
+* Materials or otherwise as set forth in writing and signed by you and
+* an authorized signatory of AMD.
+* If you do not have a copy of the Software License Agreement, contact
+* your AMD representative for a copy.
+* You agree that you will not reverse engineer or decompile the
+* Materials, in whole or in part, except as allowed by applicable law.
+* THE MATERIALS ARE DISTRIBUTED ON AN "AS IS" BASIS, WITHOUT WARRANTIES
+* OR REPRESENTATIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED.
 *
 *******************************************************************************
 */
@@ -142,6 +155,7 @@ typedef enum BL_RETCODE_T {
     BL_ERR_WAFL_SET_THRESHOLD           = 0x73, /*!< Error setting wafl PCS threshold value */
     BL_ERR_LOAD_OEMTRUSTLET             = 0x74, /*!< Error loading OEM trustlets */
     BL_ERR_RECOVERY_MODE_SYNC           = 0x75, /*!< Recovery mode accross all dies is not sync'd */
+    BL_ERR_MP0_PATCH_FUSE_STATUS_SYNC   = BL_ERR_RECOVERY_MODE_SYNC, /*!< MP0 patch fuse status is not sync'd across dies */
     BL_ERR_WAFL_UNCORRECTABLE           = 0x76, /*!< Uncorrectable WAFL error detected */
     BL_ERR_MP1_FATAL                    = 0x77, /*!< Fatal MP1 error detected */
     BL_ERR_BIOS_RTM_SIG_MISSING         = 0x78, /*!< Bootloader failed to find OEM signature */
@@ -183,7 +197,8 @@ typedef enum BL_RETCODE_T {
     BL_ERR_KNOLL_INVALID_RESPONSE       = 0x9C, /*!< Knoll returned an invalid response to a command */
     BL_ERR_KNOLL_SEND_CMD_FAILED        = 0x9D, /*!< Bootloader failed in Knoll Send Command function */
     BL_ERR_KNOLL_TEST_FAILED            = 0x9E, /*!< No Knoll device found by verifying MAC */
-    BL_ERR_POSTCODE_MAX_VALUE           = 0x9F, /*!< The maximum allowable error post code */
+    BL_ERR_FUSE_BURN_FAILED_RMA         = 0x9F, /*!< Fuse burn failed, RMA needed */
+    BL_ERR_POSTCODE_MAX_VALUE           = BL_ERR_FUSE_BURN_FAILED_RMA, /*!< The maximum allowable error post code */
 
     /*!< ********************************************************************************************/
     /*!< ************************************* BL_TRACECODE *****************************************/
@@ -250,9 +265,9 @@ typedef enum BL_RETCODE_T {
     BL_RECOVERY_HEADER_CORRUPTION       = 0xDA, /*!< Enter recovery mode with header corruption */
     BL_ERR_SECURE_UNLOCK_FAIL           = 0xDB, /*!< We should not treat this error as blocking */
     BL_SUCCESS_SRAM_IMAGE_ALREADY_LOADED= 0xDC, /*!< When same fw image type is already loaded in SRAM */
+    BL_SUCCESS_MP0_FUSE_FALLBACK_SUCCESS= 0xDE, /*!< Final MP0 fuse state sync done in fallback mode; mitigation not applied */
     BL_SUCCESS_SECURE_UNLOCK_RETURN     = 0xE0, /*!< Unlock return */
     BL_SUCCESS_TRIGGER_SYSTEM_RESET     = 0xE2, /*!< Token exipration reset triggered */
-    /*!< 0xDD - 0xE2 progress codes are available */
     BL_SUCCESS_VALIDATED_DXIO_PHY_FW_KEY= 0xE3, /*!< Completed DXIO PHY SRAM FW key Validation step */
     BL_SUCCESS_MP1_SRAM_LOAD            = 0xE4, /*!< MP1 firmware load to SRAM success */
     BL_SUCCESS_MP1_SRAM_READ            = 0xE5, /*!< Bootloader read the MP1 SRAM successfully */
@@ -274,6 +289,8 @@ typedef enum BL_RETCODE_T {
     BL_SUCCESS_SYS_DRV                  = 0xF5, /*!< Bootloader successfully loaded sys_drv */
     BL_SUCCESS_SOS                      = 0xF6, /*!< Bootloader successfully loaded secure OS */
     BL_SUCCESS_CONTROL_TO_SOS           = 0xF7, /*!< Bootloader about to transfer control to secureOS */
+    BL_SUCCESS_MP0_FUSE_STATUS_SYNC     = 0xF8, /*!< MP0 patch fuse status check and sync step */
+    BL_SUCCESS_PATCH_UPDATED            = 0xF9, /*!< Patch already updated */
     BL_SUCCESS_BOOT_DONE                = 0xFF, /*!< Bootloader sequence finished */
     BL_SUCCESS_MAX_VAL                  = BL_SUCCESS_BOOT_DONE, /*!< This is the Max Value for PostCode */
     BL_FORCE_32_BIT_ENUM                = 0x7FFFFFFF /*!< [UNUSED] Added to force this enum to 32-bits */
